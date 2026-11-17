@@ -70,7 +70,14 @@ async function handleRequest(store: Store, req: IncomingMessage, res: ServerResp
     res.end(body);
   };
   const json = (status: number, body: unknown, extra: Record<string, string> = {}): void => {
-    send(status, Buffer.from(body === null ? '' : JSON.stringify(body), 'utf8'), 'application/json; charset=utf-8', extra);
+    // Hand the string to res.end directly: Buffer.from would allocate a copy.
+    const payload = body === null ? '' : JSON.stringify(body);
+    res.writeHead(status, {
+      'content-type': 'application/json; charset=utf-8',
+      'content-length': Buffer.byteLength(payload),
+      ...extra,
+    });
+    res.end(payload);
   };
 
   const method = req.method ?? 'GET';
