@@ -9,7 +9,6 @@
 import {
   commitFile,
   deleteFile,
-  gid,
   isOid,
   isoTime,
   listBranches,
@@ -71,7 +70,7 @@ export function repoJson(store: Store, repo: Repo): Record<string, unknown> {
   const owner = store.viewerLogin ?? '';
   return {
     id: repo.id,
-    node_id: gid('Repository', String(repo.id)),
+    node_id: repo.nodeId,
     name: repo.name,
     full_name: owner === '' ? repo.name : `${owner}/${repo.name}`,
     owner: { login: owner, id: 1 },
@@ -86,7 +85,7 @@ export function repoJson(store: Store, repo: Repo): Record<string, unknown> {
 export function issueJson(store: Store, repo: Repo, issue: Issue): Record<string, unknown> {
   return {
     id: issue.id,
-    node_id: gid('Issue', String(repo.id), String(issue.number)),
+    node_id: issue.nodeId,
     number: issue.number,
     title: issue.title,
     body: issue.body,
@@ -103,7 +102,7 @@ export function pullJson(store: Store, repo: Repo, pull: PullRequest): Record<st
   const { headSha, baseSha } = store.pullTips(repo, pull);
   return {
     id: pull.id,
-    node_id: gid('PullRequest', String(repo.id), String(pull.number)),
+    node_id: pull.nodeId,
     number: pull.number,
     title: pull.title,
     body: pull.body,

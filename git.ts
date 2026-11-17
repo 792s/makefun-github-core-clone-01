@@ -194,17 +194,11 @@ function inflateOne(buf: Buffer, start: number, expectedSize: number): { data: B
     const end = at + 4;
     try {
       const check = zlib.inflateSync(rest.subarray(0, end));
-      if (check.equals(data)) {
-        // The exact end: one byte shorter must fail (a later spurious match
-        // would still inflate, since inflateSync ignores trailing bytes).
-        let shorterFails = false;
-        try {
-          zlib.inflateSync(rest.subarray(0, end - 1));
-        } catch {
-          shorterFails = true;
-        }
-        if (shorterFails) return { data, end: start + end };
-      }
+      if (check.equals(data)) return { data, end: start + end };
+      // A shorter window inflated to the same data only when the needle sits
+      // past the real end; the scan is in position order, so the first match
+      // that inflates fully is the real end (an earlier interior match is a
+      // truncated stream and throws, a later one is never reached).
     } catch {
       // Not this occurrence.
     }
@@ -447,15 +441,17 @@ export const RECEIVE_ADVERTISEMENT_TYPE = 'application/x-git-receive-pack-advert
 export const UPLOAD_RESULT_TYPE = 'application/x-git-upload-pack-result';
 export const RECEIVE_RESULT_TYPE = 'application/x-git-receive-pack-result';
 
-/** The protocol v2 capability advertisement (the `Git-Protocol: version=2` answer). */
+/** The protocol v2 capability advertisement (the `Git-Protocol: version=2` answer). Constant, so built once. */
+const ADVERTISEMENT_V2 = Buffer.concat([
+  pktLine('version 2\n'),
+  pktLine('ls-refs\n'),
+  pktLine('fetch=shallow\n'),
+  pktLine('object-format=sha1\n'),
+  FLUSH,
+]);
+
 export function advertisementV2(): Buffer {
-  return Buffer.concat([
-    pktLine('version 2\n'),
-    pktLine('ls-refs\n'),
-    pktLine('fetch=shallow\n'),
-    pktLine('object-format=sha1\n'),
-    FLUSH,
-  ]);
+  return ADVERTISEMENT_V2;
 }
 
 /** The v0 ref advertisement: the `# service=` preamble, the refs, the caps on the first line. */

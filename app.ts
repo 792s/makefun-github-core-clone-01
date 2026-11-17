@@ -74,14 +74,17 @@ async function handleRequest(store: Store, req: IncomingMessage, res: ServerResp
   };
 
   const method = req.method ?? 'GET';
-  let url: URL;
-  try {
-    url = new URL(req.url ?? '/', 'http://localhost');
-  } catch {
-    json(400, { message: 'Malformed URL' });
-    return;
+  // Parse the request target by hand: `new URL` is needlessly slow on the
+  // hot path, and the entry only ever sees origin-form targets (absolute
+  // form is stripped defensively, for a proxy that forwards it that way).
+  let target = req.url ?? '/';
+  if (target.startsWith('http://') || target.startsWith('https://')) {
+    const slash = target.indexOf('/', target.indexOf('://') + 3);
+    target = slash >= 0 ? target.slice(slash) : '/';
   }
-  const path = url.pathname;
+  const queryIndex = target.indexOf('?');
+  const path = queryIndex >= 0 ? target.slice(0, queryIndex) : target;
+  const query = new URLSearchParams(queryIndex >= 0 ? target.slice(queryIndex + 1) : '');
 
   // The health check takes no auth.
   if (path === '/healthz' && (method === 'GET' || method === 'HEAD')) {
@@ -100,7 +103,8 @@ async function handleRequest(store: Store, req: IncomingMessage, res: ServerResp
   const rawSegments = path.split('/').filter((segment) => segment !== '');
   let segments: string[];
   try {
-    segments = rawSegments.map((segment) => decodeURIComponent(segment));
+    // Most segments carry no escapes; only decode the ones that do.
+    segments = rawSegments.map((segment) => (segment.includes('%') ? decodeURIComponent(segment) : segment));
   } catch {
     json(400, { message: 'Malformed URL' });
     return;
@@ -124,7 +128,7 @@ async function handleRequest(store: Store, req: IncomingMessage, res: ServerResp
       store,
       method,
       segments: segments.slice(2),
-      query: url.searchParams,
+      query,
       body,
       host: req.headers.host ?? 'localhost',
     });
@@ -183,7 +187,7 @@ async function handleRequest(store: Store, req: IncomingMessage, res: ServerResp
       return;
     }
     if (endpoint === 'info/refs' && method === 'GET') {
-      const service = url.searchParams.get('service');
+      const service = query.get('service');
       if (service === 'git-upload-pack') {
         const proto = req.headers['git-protocol'];
         const protoText = Array.isArray(proto) ? proto.join(',') : (proto ?? '');

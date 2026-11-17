@@ -1,0 +1,2 @@
+# Profiling artifacts (never part of the entry).
+*.cpuprofile

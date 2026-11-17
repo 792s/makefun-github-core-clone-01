@@ -673,7 +673,7 @@ function executeField(ctx: Ctx, parentType: string, parentData: unknown, field: 
       const repo = parentData as Repo;
       switch (field.name) {
         case 'id':
-          return gid('Repository', String(repo.id));
+          return repo.nodeId;
         case 'databaseId':
           return repo.id;
         case 'name':
@@ -720,7 +720,7 @@ function executeField(ctx: Ctx, parentType: string, parentData: unknown, field: 
       const issue = parentData as Issue;
       switch (field.name) {
         case 'id':
-          return gid('Issue', String(issue.repoId), String(issue.number));
+          return issue.nodeId;
         case 'number':
           return issue.number;
         case 'title':
@@ -751,7 +751,7 @@ function executeField(ctx: Ctx, parentType: string, parentData: unknown, field: 
       const pull = parentData as PullRequest;
       switch (field.name) {
         case 'id':
-          return gid('PullRequest', String(pull.repoId), String(pull.number));
+          return pull.nodeId;
         case 'number':
           return pull.number;
         case 'state':

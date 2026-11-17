@@ -183,8 +183,13 @@ export function parseGid(id: string): { kind: string; parts: string[] } | null {
 }
 
 /** An ISO timestamp derived from the deterministic counter (no wall clock). */
+const isoCache = new Map<number, string>();
 export function isoTime(seq: number): string {
-  return new Date((COMMIT_EPOCH + seq) * 1000).toISOString();
+  const cached = isoCache.get(seq);
+  if (cached !== undefined) return cached;
+  const text = new Date((COMMIT_EPOCH + seq) * 1000).toISOString();
+  isoCache.set(seq, text);
+  return text;
 }
 
 // ---------------------------------------------------------------------------
@@ -200,6 +205,8 @@ export interface Issue {
   id: number;
   /** The repository's database id (for the global id). */
   repoId: number;
+  /** The cached global (Relay) id, computed once at creation. */
+  nodeId: string;
   /** The per-repository number, from 1. */
   number: number;
   title: string;
@@ -223,6 +230,8 @@ export interface PullRequest {
   id: number;
   /** The repository's database id (for the global id). */
   repoId: number;
+  /** The cached global (Relay) id, computed once at creation. */
+  nodeId: string;
   number: number;
   title: string;
   body: string;
@@ -241,6 +250,8 @@ export interface PullRequest {
 export interface Repo {
   /** The numeric database id (GraphQL `databaseId`, REST `id`). */
   id: number;
+  /** The cached global (Relay) id, computed once at creation. */
+  nodeId: string;
   name: string;
   description: string;
   private: boolean;
@@ -309,6 +320,7 @@ export class Store {
     this.repoSeq += 1;
     const repo: Repo = {
       id: this.repoSeq,
+      nodeId: gid('Repository', String(this.repoSeq)),
       name,
       description: opts.description ?? '',
       private: opts.private ?? false,
@@ -474,6 +486,7 @@ export class Store {
     const issue: Issue = {
       id: this.issueIdSeq,
       repoId: repo.id,
+      nodeId: gid('Issue', String(repo.id), String(repo.issueSeq)),
       number: repo.issueSeq,
       title: input.title,
       body: input.body ?? '',
@@ -522,6 +535,7 @@ export class Store {
     const pull: PullRequest = {
       id: this.pullIdSeq,
       repoId: repo.id,
+      nodeId: gid('PullRequest', String(repo.id), String(repo.pullSeq)),
       number: repo.pullSeq,
       title: input.title,
       body: input.body ?? '',
