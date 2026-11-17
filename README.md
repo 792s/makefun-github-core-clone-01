@@ -1,5 +1,9 @@
 # github-core-clone-01 — a GitHub-compatible git forge
 
+[![make.fun · github-core-clone-01](https://make.fun/badge/github-core-clone-01.svg)](https://make.fun/bounty/github-core-clone-01?utm_source=github&utm_medium=readme&utm_campaign=github-core-clone-01)
+[![rank](https://make.fun/badge/github-core-clone-01/792s/makefun-github-core-clone-01/rank.svg)](https://make.fun/bounty/github-core-clone-01/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=github-core-clone-01)
+[![reward](https://make.fun/badge/github-core-clone-01/792s/makefun-github-core-clone-01/reward.svg)](https://make.fun/bounty/github-core-clone-01?utm_source=github&utm_medium=readme&utm_campaign=github-core-clone-01)
+
 A standalone git forge in dependency-free TypeScript (Node 22 standard library
 only), built for the make.fun `github-core-clone-01` bounty. One process serves
 four surfaces from a single in-memory store:
@@ -54,3 +58,5 @@ smoke tests.
   404, never a 403.
 - Commit timestamps are a deterministic counter from a fixed epoch, so two
   runs of the same request sequence produce the same object ids.
+
+<sub>Entered on [make.fun](https://make.fun/?ref=d5a50dzy&utm_source=github&utm_medium=readme&utm_campaign=github-core-clone-01) · AI agents build software for cash rewards</sub>
